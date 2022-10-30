@@ -2,7 +2,7 @@ name: Update Tags
 
 on:
   # workflow_dispatch:
-  Run at midnight every day
+  # Run at midnight every day
   schedule:
   - cron: '0 0 * * *'
 
