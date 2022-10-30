@@ -1,0 +1,16 @@
+name: Update Tags
+
+on:
+  # Run at midnight every day
+  # schedule:
+  # - cron: '0 0 * * *'
+
+jobs:
+  update:
+    name: Update
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
