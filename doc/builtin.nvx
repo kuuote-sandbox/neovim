@@ -4,7 +4,7 @@
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
 
 
-Builtin functions				*builtin-functions*
+Builtin functions		*vimscript-functions* *builtin-functions*
 
 For functions grouped by what they are used for see |function-list|.
 
@@ -220,6 +220,7 @@ gettabvar({nr}, {varname} [, {def}])
 gettabwinvar({tabnr}, {winnr}, {name} [, {def}])
 				any	{name} in {winnr} in tab page {tabnr}
 gettagstack([{nr}])		Dict	get the tag stack of window {nr}
+gettext({text})			String	lookup translation of {text}
 getwininfo([{winid}])		List	list of info about each window
 getwinpos([{timeout}])		List	X and Y coord in pixels of the Vim window
 getwinposx()			Number	X coord in pixels of Vim window
@@ -1197,11 +1198,9 @@ col({expr})	The result is a Number, which is the byte index of the column
 		buffer.
 		For the cursor position, when 'virtualedit' is active, the
 		column is one higher if the cursor is after the end of the
-		line.  This can be used to obtain the column in Insert mode: >
-			:imap <F2> <C-O>:let save_ve = &ve<CR>
-				\<C-O>:set ve=all<CR>
-				\<C-O>:echo col(".") .. "\n" <Bar>
-				\let &ve = save_ve<CR>
+		line.  Also, when using a <Cmd> mapping the cursor isn't
+		moved, this can be used to obtain the column in Insert mode: >
+			:imap <F2> <Cmd>echo col(".")<CR>
 
 <		Can also be used as a |method|: >
 			GetPos()->col()
@@ -3583,6 +3582,19 @@ gettagstack([{winnr}])					*gettagstack()*
 
 		Can also be used as a |method|: >
 			GetWinnr()->gettagstack()
+
+
+gettext({text})						*gettext()*
+		Translate String {text} if possible.
+		This is mainly for use in the distributed Vim scripts.  When
+		generating message translations the {text} is extracted by
+		xgettext, the translator can add the translated message in the
+		.po file and Vim will lookup the translation when gettext() is
+		called.
+		For {text} double quoted strings are preferred, because
+		xgettext does not understand escaping in single quoted
+		strings.
+
 
 getwininfo([{winid}])					*getwininfo()*
 		Returns information about windows as a |List| with Dictionaries.
@@ -6790,18 +6802,24 @@ serverstart([{address}])				*serverstart()*
 		|RPC| messages. Clients can send |API| commands to the
 		returned address to control Nvim.
 
-		Returns the address string (may differ from the requested
-		{address}).
-		 
-		- If {address} contains a colon ":" it is interpreted as
-		  a TCP/IPv4/IPv6 address where the last ":" separates host
-		  and port (empty or zero assigns a random port).
-		- Else it is interpreted as a named pipe or Unix domain socket
-		  path. If there are no slashes it is treated as a name and
-		  appended to a generated path.
-		- If {address} is empty it generates a path.
+		Returns the address string (which may differ from the
+		{address} argument, see below).
 
-		Example named pipe: >
+		- If {address} has a colon (":") it is a TCP/IPv4/IPv6 address
+		  where the last ":" separates host and port (empty or zero
+		  assigns a random port).
+		- Else {address} is the path to a named pipe (except on Windows).
+		  - If {address} has no slashes ("/") it is treated as the
+		    "name" part of a generated path in this format: >
+			stdpath("run").."/{name}.{pid}.{counter}"
+<		  - If {address} is omitted the name is "nvim". >
+			:echo serverstart()
+			=> /tmp/nvim.bram/oknANW/nvim.15430.5
+
+<		Example bash command to list all Nvim servers: >
+			ls ${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}/*/nvim.*.0
+
+<		Example named pipe: >
 			if has('win32')
 			  echo serverstart('\\.\pipe\nvim-pipe-1234')
 			else

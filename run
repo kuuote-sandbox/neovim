@@ -1,0 +1,9 @@
+#!/bin/bash
+
+git clone --depth 1 https://github.com/neovim/neovim
+(
+  cd neovim/runtime/doc
+  for file in $(echo *.txt); do
+    mv $file $(basename $file .txt).nvx
+  done
+)
