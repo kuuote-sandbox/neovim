@@ -624,8 +624,7 @@ If the command is a normal search command (it starts and ends with "/" or
 "?"), some special handling is done:
 - Searching starts on line 1 of the file.
   The direction of the search is forward for "/", backward for "?".
-  Note that 'wrapscan' does not matter, the whole file is always searched.  (Vi
-  does use 'wrapscan', which caused tags sometimes not be found.)
+  Note that 'wrapscan' does not matter, the whole file is always searched.
 - If the search fails, another try is done ignoring case.  If that fails too,
   a search is done for:
 	"^tagname[ \t]*("
@@ -909,6 +908,8 @@ If the function returns |v:null| instead of a List, a standard tag lookup will
 be performed instead.
 
 It is not allowed to change the tagstack from inside 'tagfunc'.  *E986* 
+It is not allowed to close a window or change window from inside 'tagfunc'.
+*E1299*
 
 The following is a hypothetical example of a function used for 'tagfunc'.  It
 uses the output of |taglist()| to generate the result: a list of tags in the

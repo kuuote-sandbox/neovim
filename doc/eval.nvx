@@ -229,13 +229,13 @@ is not available it returns zero or the default value you specify: >
 
 
 List concatenation ~
-
+							*list-concatenation*
 Two lists can be concatenated with the "+" operator: >
 	:let longlist = mylist + [5, 6]
 	:let mylist += [7, 8]
 
-To prepend or append an item turn the item into a list by putting [] around
-it.  To change a list in-place see |list-modification| below.
+To prepend or append an item, turn the item into a list by putting [] around
+it.  To change a list in-place, refer to |list-modification| below.
 
 
 Sublist ~
@@ -1708,13 +1708,13 @@ v:charconvert_to
 
 					*v:cmdarg* *cmdarg-variable*
 v:cmdarg	This variable is used for two purposes:
-		1. The extra arguments given to a file read/write command.
-		   Currently these are "++enc=" and "++ff=".  This variable is
-		   set before an autocommand event for a file read/write
-		   command is triggered.  There is a leading space to make it
-		   possible to append this variable directly after the
-		   read/write command.  Note: The "+cmd" argument isn't
-		   included here, because it will be executed anyway.
+		1. The extra arguments ("++p", "++enc=", "++ff=") given to
+		   a file read/write command.  This is set before an
+		   autocommand event for a file read/write command is
+		   triggered.  There is a leading space to make it possible to
+		   append this variable directly after the read/write command.
+		   Note: "+cmd" isn't included here, because it will be
+		   executed anyway.
 		2. When printing a PostScript file with ":hardcopy" this is
 		   the argument for the ":hardcopy" command.  This can be used
 		   in 'printexpr'.
@@ -1780,7 +1780,7 @@ v:exiting	Exit code, or |v:null| before invoking the |VimLeavePre|
 		and |VimLeave| autocmds.  See |:q|, |:x| and |:cquit|.
 		Example: >
 			:au VimLeave * echo "Exit value is " .. v:exiting
-
+<
 					*v:echospace* *echospace-variable*
 v:echospace	Number of screen cells that can be used for an `:echo` message
 		in the last screen line before causing the |hit-enter-prompt|.
@@ -2698,6 +2698,8 @@ text...
 			Unlock the internal variable {name}.  Does the
 			opposite of |:lockvar|.
 
+			No error is given if {name} does not exist.
+
 :if {expr1}			*:if* *:end* *:endif* *:en* *E171* *E579* *E580*
 :en[dif]		Execute the commands until the next matching `:else`
 			or `:endif` if {expr1} evaluates to non-zero.
@@ -3177,7 +3179,7 @@ this pending exception or command is discarded.
 For examples see |throw-catch| and |try-finally|.
 
 
-NESTING	OF TRY CONDITIONALS				*try-nesting*
+NESTING OF TRY CONDITIONALS				*try-nesting*
 
 Try conditionals can be nested arbitrarily.  That is, a complete try
 conditional can be put into the try block, a catch clause, or the finally

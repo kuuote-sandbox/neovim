@@ -78,13 +78,13 @@ chanclose({id} [, {stream}])	Number	Closes a channel or one of its streams
 chansend({id}, {data})		Number	Writes {data} to channel
 char2nr({expr} [, {utf8}])	Number	ASCII/UTF-8 value of first char in {expr}
 charclass({string})		Number	character class of {string}
-charcol({expr})			Number	column number of cursor or mark
+charcol({expr} [, {winid}])	Number	column number of cursor or mark
 charidx({string}, {idx} [, {countcc}])
 				Number	char index of byte {idx} in {string}
 chdir({dir})			String	change current working directory
 cindent({lnum})			Number	C indent for line {lnum}
 clearmatches([{win}])		none	clear all matches
-col({expr})			Number	column byte index of cursor or mark
+col({expr} [, {winid}])		Number	column byte index of cursor or mark
 complete({startcol}, {matches}) none	set Insert mode completion
 complete_add({expr})		Number	add completion match
 complete_check()		Number	check for key typed during completion
@@ -134,7 +134,8 @@ exists({expr})			Number	|TRUE| if {expr} exists
 exp({expr})			Float	exponential of {expr}
 expand({expr} [, {nosuf} [, {list}]])
 				any	expand special keywords in {expr}
-expandcmd({expr})		String	expand {expr} like with `:edit`
+expandcmd({string} [, {options}])
+				String	expand {string} like with `:edit`
 extend({expr1}, {expr2} [, {expr3}])
 				List/Dict insert items of {expr2} into {expr1}
 feedkeys({string} [, {mode}])	Number	add key sequence to typeahead buffer
@@ -169,6 +170,7 @@ get({func}, {what})		any	get property of funcref/partial {func}
 getbufinfo([{buf}])		List	information about buffers
 getbufline({buf}, {lnum} [, {end}])
 				List	lines {lnum} to {end} of buffer {buf}
+getbufoneline({buf}, {lnum})	String	line {lnum} of buffer {buf}
 getbufvar({buf}, {varname} [, {def}])
 				any	variable {varname} in buffer {buf}
 getchangelist([{buf}])		List	list of change list items
@@ -349,6 +351,7 @@ pyxeval({expr})			any	evaluate |python_x| expression
 rand([{expr}])			Number	get pseudo-random number
 range({expr} [, {max} [, {stride}]])
 				List	items from {expr} to {max}
+readblob({fname})		Blob	read a |Blob| from {fname}
 readdir({dir} [, {expr}])	List	file names in {dir} selected by {expr}
 readfile({fname} [, {type} [, {max}]])
 				List	get list of lines from file {fname}
@@ -465,10 +468,11 @@ str2list({expr} [, {utf8}])	List	convert each character of {expr} to
 					ASCII/UTF-8 value
 str2nr({expr} [, {base} [, {quoted}]])
 				Number	convert String to Number
+strcharlen({expr})		Number	character length of the String {expr}
 strcharpart({str}, {start} [, {len}])
 				String	{len} characters of {str} at
 					character {start}
-strchars({expr} [, {skipcc}])	Number	character length of the String {expr}
+strchars({expr} [, {skipcc}])	Number	character count of the String {expr}
 strdisplaywidth({expr} [, {col}]) Number display length of the String {expr}
 strftime({format} [, {time}])	String	format time with a specified format
 strgetchar({str}, {index})	Number	get char {index} from {str}
@@ -635,6 +639,7 @@ append({lnum}, {text})					*append()*
 		text line below line {lnum} in the current buffer.
 		Otherwise append {text} as one text line below line {lnum} in
 		the current buffer.
+		Any type of item is accepted and converted to a String.
 		{lnum} can be zero to insert a line before the first one.
 		{lnum} is used like with |getline()|.
 		Returns 1 for failure ({lnum} out of range or out of memory),
@@ -653,9 +658,10 @@ appendbufline({buf}, {lnum}, {text})			*appendbufline()*
 
 		For the use of {buf}, see |bufname()|.
 
-		{lnum} is used like with |append()|.  Note that using |line()|
-		would use the current buffer, not the one appending to.
-		Use "$" to append at the end of the buffer.
+		{lnum} is the line number to append below.  Note that using
+		|line()| would use the current buffer, not the one appending
+		to.  Use "$" to append at the end of the buffer.  Other string
+		values are not supported.
 
 		On success 0 is returned, on failure 1 is returned.
 
@@ -916,7 +922,8 @@ bufwinid({buf})						*bufwinid()*
 
 	echo "A window containing buffer 1 is " .. (bufwinid(1))
 <
-		Only deals with the current tab page.
+		Only deals with the current tab page.  See |win_findbuf()| for
+		finding more.
 
 		Can also be used as a |method|: >
 			FindBuffer()->bufwinid()
@@ -1084,8 +1091,8 @@ charclass({string})					*charclass()*
 		Returns 0 if {string} is not a |String|.
 
 
-							*charcol()*
-charcol({expr})	Same as |col()| but returns the character index of the column
+charcol({expr} [, {winid}])				*charcol()*
+		Same as |col()| but returns the character index of the column
 		position given with {expr} instead of the byte position.
 
 		Example:
@@ -1167,8 +1174,8 @@ clearmatches([{win}])					*clearmatches()*
 		Can also be used as a |method|: >
 			GetWin()->clearmatches()
 <
-							*col()*
-col({expr})	The result is a Number, which is the byte index of the column
+col({expr} [, {winid})					*col()*
+		The result is a Number, which is the byte index of the column
 		position given with {expr}.  The accepted positions are:
 		    .	    the cursor position
 		    $	    the end of the cursor line (the result is the
@@ -1183,6 +1190,8 @@ col({expr})	The result is a Number, which is the byte index of the column
 		and column number. Most useful when the column is "$", to get
 		the last column of a specific line.  When "lnum" or "col" is
 		out of range then col() returns zero.
+		With the optional {winid} argument the values are obtained for
+		that window instead of the current window.
 		To get the line number use |line()|.  To get both use
 		|getpos()|.
 		For the screen column position use |virtcol()|.  For the
@@ -1193,14 +1202,15 @@ col({expr})	The result is a Number, which is the byte index of the column
 			col("$")		length of cursor line plus one
 			col("'t")		column of mark t
 			col("'" .. markname)	column of mark markname
-<		The first column is 1.  Returns 0 if {expr} is invalid.
+<		The first column is 1.  Returns 0 if {expr} is invalid or when
+		the window with ID {winid} is not found.
 		For an uppercase mark the column may actually be in another
 		buffer.
 		For the cursor position, when 'virtualedit' is active, the
 		column is one higher if the cursor is after the end of the
 		line.  Also, when using a <Cmd> mapping the cursor isn't
 		moved, this can be used to obtain the column in Insert mode: >
-			:imap <F2> <Cmd>echo col(".")<CR>
+			:imap <F2> <Cmd>echo col(".").."\n"<CR>
 
 <		Can also be used as a |method|: >
 			GetPos()->col()
@@ -2041,18 +2051,27 @@ expand({string} [, {nosuf} [, {list}]])				*expand()*
 		Can also be used as a |method|: >
 			Getpattern()->expand()
 
-expandcmd({string})					*expandcmd()*
+expandcmd({string} [, {options}])			*expandcmd()*
 		Expand special items in String {string} like what is done for
 		an Ex command such as `:edit`.  This expands special keywords,
 		like with |expand()|, and environment variables, anywhere in
 		{string}.  "~user" and "~/path" are only expanded at the
 		start.
+
+		The following items are supported in the {options} Dict
+		argument:
+		    errmsg	If set to TRUE, error messages are displayed
+				if an error is encountered during expansion.
+				By default, error messages are not displayed.
+
 		Returns the expanded string.  If an error is encountered
 		during expansion, the unmodified {string} is returned.
+
 		Example: >
 			:echo expandcmd('make %<.o')
-<			make /path/runtime/doc/builtin.o ~
-
+			make /path/runtime/doc/builtin.o
+			:echo expandcmd('make %<.o', {'errmsg': v:true})
+<
 		Can also be used as a |method|: >
 			GetCommand()->expandcmd()
 <
@@ -2278,7 +2297,7 @@ flatten({list} [, {maxdepth}])					*flatten()*
 float2nr({expr})					*float2nr()*
 		Convert {expr} to a Number by omitting the part after the
 		decimal point.
-		{expr} must evaluate to a |Float| or a Number.
+		{expr} must evaluate to a |Float| or a |Number|.
 		Returns 0 if {expr} is not a |Float| or a |Number|.
 		When the value of {expr} is out of range for a |Number| the
 		result is truncated to 0x7fffffff or -0x7fffffff (or when
@@ -2667,11 +2686,13 @@ getbufinfo([{dict}])
 		Can also be used as a |method|: >
 			GetBufnr()->getbufinfo()
 <
+
 							*getbufline()*
 getbufline({buf}, {lnum} [, {end}])
 		Return a |List| with the lines starting from {lnum} to {end}
 		(inclusive) in the buffer {buf}.  If {end} is omitted, a
-		|List| with only the line {lnum} is returned.
+		|List| with only the line {lnum} is returned.  See
+		`getbufoneline()` for only getting the line.
 
 		For the use of {buf}, see |bufname()| above.
 
@@ -2694,6 +2715,11 @@ getbufline({buf}, {lnum} [, {end}])
 
 <		Can also be used as a |method|: >
 			GetBufnr()->getbufline(lnum)
+<
+							*getbufoneline()*
+getbufoneline({buf}, {lnum})
+		Just like `getbufline()` but only get one line and return it
+		as a string.
 
 getbufvar({buf}, {varname} [, {def}])				*getbufvar()*
 		The result is the value of option or local buffer variable
@@ -3181,7 +3207,8 @@ getline({lnum} [, {end}])
 <		Can also be used as a |method|: >
 			ComputeLnum()->getline()
 
-<		To get lines from another buffer see |getbufline()|
+<		To get lines from another buffer see |getbufline()| and
+		|getbufoneline()|
 
 getloclist({nr} [, {what}])				*getloclist()*
 		Returns a |List| with all the entries in the location list for
@@ -6036,6 +6063,14 @@ rand([{expr}])						*rand()*
 		Can also be used as a |method|: >
 			seed->rand()
 <
+
+readblob({fname})					*readblob()*
+		Read file {fname} in binary mode and return a |Blob|.
+		When the file can't be opened an error message is given and
+		the result is an empty |Blob|.
+		Also see |readfile()| and |writefile()|.
+
+
 							*readdir()*
 readdir({directory} [, {expr}])
 		Return a list with file and directory names in {directory}.
@@ -6070,6 +6105,7 @@ readdir({directory} [, {expr}])
 		Can also be used as a |method|: >
 			GetDirName()->readdir()
 <
+
 							*readfile()*
 readfile({fname} [, {type} [, {max}]])
 		Read file {fname} and return a |List|, each line of the file
@@ -6081,8 +6117,6 @@ readfile({fname} [, {type} [, {max}]])
 		- When the last line ends in a NL an extra empty list item is
 		  added.
 		- No CR characters are removed.
-		When {type} contains "B" a |Blob| is returned with the binary
-		data of the file unmodified.
 		Otherwise:
 		- CR characters that appear before a NL are removed.
 		- Whether the last line ends in a NL or not does not matter.
@@ -6099,6 +6133,9 @@ readfile({fname} [, {type} [, {max}]])
 		Note that without {max} the whole file is read into memory.
 		Also note that there is no recognition of encoding.  Read a
 		file into a buffer if you need to.
+		Deprecated (use |readblob()| instead): When {type} contains
+		"B" a |Blob| is returned with the binary data of the file
+		unmodified.
 		When the file can't be opened an error message is given and
 		the result is an empty list.
 		Also see |writefile()|.
@@ -6884,29 +6921,38 @@ setbufvar({buf}, {varname}, {val})			*setbufvar()*
 
 setcellwidths({list})					*setcellwidths()*
 		Specify overrides for cell widths of character ranges.  This
-		tells Vim how wide characters are, counted in screen cells.
-		This overrides 'ambiwidth'.  Example: >
-		   setcellwidths([[0xad, 0xad, 1],
-				\ [0x2194, 0x2199, 2]])
+		tells Vim how wide characters are when displayed in the
+		terminal, counted in screen cells.  The values override
+		'ambiwidth'.  Example: >
+		   call setcellwidths([
+				\ [0x111, 0x111, 1],
+				\ [0x2194, 0x2199, 2],
+				\ ])
 
-<				*E1109* *E1110* *E1111* *E1112* *E1113* *E1114*
-		The {list} argument is a list of lists with each three
-		numbers. These three numbers are [low, high, width].  "low"
-		and "high" can be the same, in which case this refers to one
-		character. Otherwise it is the range of characters from "low"
-		to "high" (inclusive).  "width" is either 1 or 2, indicating
-		the character width in screen cells.
-		An error is given if the argument is invalid, also when a
-		range overlaps with another.
+<		The {list} argument is a List of Lists with each three
+		numbers: [{low}, {high}, {width}].	*E1109* *E1110*
+		{low} and {high} can be the same, in which case this refers to
+		one character.  Otherwise it is the range of characters from
+		{low} to {high} (inclusive).		*E1111* *E1114*
 		Only characters with value 0x100 and higher can be used.
+
+		{width} must be either 1 or 2, indicating the character width
+		in screen cells.			*E1112*
+		An error is given if the argument is invalid, also when a
+		range overlaps with another. 		*E1113*
 
 		If the new value causes 'fillchars' or 'listchars' to become
 		invalid it is rejected and an error is given.
 
-		To clear the overrides pass an empty list: >
-		   setcellwidths([]);
+		To clear the overrides pass an empty {list}: >
+		   call setcellwidths([])
+
 <		You can use the script $VIMRUNTIME/tools/emoji_list.vim to see
-		the effect for known emoji characters.
+		the effect for known emoji characters.  Move the cursor
+		through the text to check if the cell widths of your terminal
+		match with what Vim knows about each emoji.  If it doesn't
+		look right you need to adjust the {list} argument.
+
 
 setcharpos({expr}, {list})				*setcharpos()*
 		Same as |setpos()| but uses the specified column number as the
@@ -7027,6 +7073,8 @@ setline({lnum}, {text})					*setline()*
 		{lnum} is used like with |getline()|.
 		When {lnum} is just below the last line the {text} will be
 		added below the last line.
+		{text} can be any type or a List of any type, each item is
+		converted to a String.
 
 		If this succeeds, FALSE is returned.  If this fails (most likely
 		because {lnum} is invalid) TRUE is returned.
@@ -7069,8 +7117,8 @@ setloclist({nr}, {list} [, {action} [, {what}]])		*setloclist()*
 			GetLoclist()->setloclist(winnr)
 
 setmatches({list} [, {win}])				*setmatches()*
-		Restores a list of matches saved by |getmatches() for the
-		current window|.  Returns 0 if successful, otherwise -1.  All
+		Restores a list of matches saved by |getmatches()| for the
+		current window.  Returns 0 if successful, otherwise -1.  All
 		current matches are cleared before the list is restored.  See
 		example for |getmatches()|.
 		If {win} is specified, use the window with this number or
@@ -7250,6 +7298,7 @@ setqflist({list} [, {action} [, {what}]])		*setqflist()*
 							*setreg()*
 setreg({regname}, {value} [, {options}])
 		Set the register {regname} to {value}.
+		If {regname} is "" or "@", the unnamed register '"' is used.
 		The {regname} argument is a string.
 
 		{value} may be any value returned by |getreg()| or
@@ -7823,6 +7872,21 @@ str2nr({string} [, {base}])			*str2nr()*
 		Can also be used as a |method|: >
 			GetText()->str2nr()
 
+
+strcharlen({string})					*strcharlen()*
+		The result is a Number, which is the number of characters
+		in String {string}.  Composing characters are ignored.
+		|strchars()| can count the number of characters, counting
+		composing characters separately.
+
+		Returns 0 if {string} is empty or on error.
+
+		Also see |strlen()|, |strdisplaywidth()| and |strwidth()|.
+
+		Can also be used as a |method|: >
+			GetText()->strcharlen()
+
+
 strcharpart({src}, {start} [, {len}])			*strcharpart()*
 		Like |strpart()| but using character index and length instead
 		of byte index and length.  Composing characters are counted
@@ -7837,12 +7901,14 @@ strcharpart({src}, {start} [, {len}])			*strcharpart()*
 		Can also be used as a |method|: >
 			GetText()->strcharpart(5)
 
+
 strchars({string} [, {skipcc}])					*strchars()*
 		The result is a Number, which is the number of characters
 		in String {string}.
 		When {skipcc} is omitted or zero, composing characters are
 		counted separately.
 		When {skipcc} set to 1, Composing characters are ignored.
+		|strcharlen()| always does this.
 
 		Returns zero on error.
 
@@ -7937,7 +8003,7 @@ stridx({haystack}, {needle} [, {start}])		*stridx()*
 
 		Can also be used as a |method|: >
 			GetHaystack()->stridx(needle)
-
+<
 							*string()*
 string({expr})	Return {expr} converted to a String.  If {expr} is a Number,
 		Float, String, Blob or a composition of them, then the result
@@ -8907,7 +8973,12 @@ win_execute({id}, {command} [, {silent}])		*win_execute()*
 		have unexpected side effects.  Use |:noautocmd| if needed.
 		Example: >
 			call win_execute(winid, 'syntax enable')
-<
+<		Doing the same with `setwinvar()` would not trigger
+		autocommands and not actually show syntax highlighting.
+
+		When window {id} does not exist then no error is given and
+		an empty string is returned.
+
 		Can also be used as a |method|, the base is passed as the
 		second argument: >
 			GetCommand()->win_execute(winid)
@@ -8988,6 +9059,7 @@ win_move_separator({nr}, {offset})			*win_move_separator()*
 		FALSE otherwise.
 		This will fail for the rightmost window and a full-width
 		window, since it has no separator on the right.
+		Only works for the current tab page. *E1308*
 
 		Can also be used as a |method|: >
 			GetWinnr()->win_move_separator(offset)
@@ -9002,6 +9074,7 @@ win_move_statusline({nr}, {offset})			*win_move_statusline()*
 		movement may be smaller than specified (e.g., as a consequence
 		of maintaining 'winminheight'). Returns TRUE if the window can
 		be found and FALSE otherwise.
+		Only works for the current tab page.
 
 		Can also be used as a |method|: >
 			GetWinnr()->win_move_statusline(offset)
