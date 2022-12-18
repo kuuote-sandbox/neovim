@@ -10,5 +10,7 @@ git clone --depth 1 https://github.com/neovim/neovim
 rm -rf doc
 mv neovim/runtime/doc ./
 git add doc
+git config --global user.name kuuote
+git config --global user.email kuuote@example.com
 git commit -m 'update'
 git push
