@@ -211,6 +211,9 @@ The following new APIs and features were added.
 • A clipboard provider which uses OSC 52 to copy the selection to the system
   clipboard is now bundled by default. |clipboard-osc52|
 
+• The 'termsync' option asks the terminal emulator to buffer screen updates
+  until the redraw cycle is complete. Requires support from the terminal.
+
 ==============================================================================
 CHANGED FEATURES                                                 *news-changed*
 
@@ -339,5 +342,9 @@ release.
 
 • vim.treesitter.languagetree functions:
   - |LanguageTree:for_each_child()|	Use |LanguageTree:children()| (non-recursive) instead.
+
+• The "term_background" UI option |ui-ext-options| is deprecated and no longer
+  populated. Background color detection is now performed in Lua by the Nvim
+  core, not the TUI.
 
  vim:tw=78:ts=8:sw=2:et:ft=help:norl:
