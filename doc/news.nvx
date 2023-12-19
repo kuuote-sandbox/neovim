@@ -268,6 +268,8 @@ The following new APIs and features were added.
 • 'completeopt' option supports "popup" flags to show extra information in
   in floating window.
 
+• Added `x1` and `x2` mouse buttons as possible arguments to |nvim_input_mouse()|
+
 ==============================================================================
 CHANGED FEATURES                                                 *news-changed*
 
@@ -386,6 +388,9 @@ DEPRECATIONS                                                *news-deprecations*
 
 The following functions are now deprecated and will be removed in a future
 release.
+
+• Configuring |diagnostic-signs| using |:sign-define| or |sign_define()|. Use
+  the "signs" key of |vim.diagnostic.config()| instead.
 
 • Checkhealth functions:
   - |health#report_error|, |vim.health.report_error()|	Use |vim.health.error()| instead.
