@@ -1491,7 +1491,7 @@ are read during initialization) >
 	:let html_my_rendering=1
 
 If you'd like to see an example download mysyntax.vim at
-https://www.fleiner.com/vim/download.html
+https://web.archive.org/web/20241129015117/https://www.fleiner.com/vim/download.html
 
 You can also disable this rendering by adding the following line to your
 vimrc file: >
@@ -5354,6 +5354,11 @@ Normal		Normal text.
 NormalFloat	Normal text in floating windows.
 							*hl-FloatBorder*
 FloatBorder	Border of floating windows.
+							*hl-FloatShadow*
+FloatShadow	Blended areas when border is "shadow".
+							*hl-FLoatShadowThrough*
+FloatShadowThrough
+		Shadow corners when border is "shadow".
 							*hl-FloatTitle*
 FloatTitle	Title of floating windows.
 							*hl-FloatFooter*
@@ -5382,6 +5387,13 @@ PmenuMatch	Popup menu: Matched text in normal item. Combined with
 							*hl-PmenuMatchSel*
 PmenuMatchSel	Popup menu: Matched text in selected item. Combined with
 		|hl-PmenuMatch| and |hl-PmenuSel|.
+							*hl-PmenuBorder*
+PmenuBorder	Popup menu: border of popup menu.
+							*hl-PmenuShadow*
+PmenuShadow	Popup menu: blended areas when 'pumborder' is "shadow".
+							*hl-PmenuShadowThrough*
+PmenuShadowThrough
+		Popup menu: shadow corners when 'pumborder' is "shadow".
 							*hl-ComplMatchIns*
 ComplMatchIns	Matched text of the currently inserted completion.
 							*hl-PreInsert*
